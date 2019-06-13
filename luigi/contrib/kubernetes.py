@@ -272,7 +272,10 @@ class KubernetesJobTask(luigi.Task):
         # Verify that the pod started
         pods = self.__get_pods()
 
-        assert len(pods) > 0, "No pod scheduled by " + self.uu_name
+        # A job and corresponding pods are not synchronously created.
+        if len(pods) == 0:
+            return False
+
         for pod in pods:
             status = pod.obj['status']
             for cont_stats in status.get('containerStatuses', []):
@@ -290,6 +293,8 @@ class KubernetesJobTask(luigi.Task):
             for cond in status.get('conditions', []):
                 if 'message' in cond:
                     if cond['reason'] == 'ContainersNotReady':
+                        return False
+                    if cond['reason'] == 'Unschedulable':
                         return False
                     assert cond['status'] != 'False', \
                         "[ERROR] %s - %s" % (cond['reason'], cond['message'])
