@@ -294,9 +294,7 @@ class KubernetesJobTask(luigi.Task):
 
             for cond in status.get('conditions', []):
                 if 'message' in cond:
-                    if cond['reason'] == 'ContainersNotReady':
-                        return False
-                    if cond['reason'] == 'Unschedulable':
+                    if cond['reason'] in ['ContainersNotReady', 'Unschedulable']:
                         return False
                     assert cond['status'] != 'False', \
                         "[ERROR] %s - %s" % (cond['reason'], cond['message'])
