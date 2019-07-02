@@ -287,7 +287,9 @@ class KubernetesJobTask(luigi.Task):
 
                 if 'waiting' in cont_stats['state']:
                     wr = cont_stats['state']['waiting']['reason']
-                    assert wr == 'ContainerCreating', "Pod %s %s. Logs: `kubectl logs pod/%s`" % (
+                    if wr in ['ContainerCreating', 'ImagePullBackOff']:
+                        return False
+                    assert False, "Pod %s %s. Logs: `kubectl logs pod/%s`" % (
                         pod.name, wr, pod.name)
 
             for cond in status.get('conditions', []):
